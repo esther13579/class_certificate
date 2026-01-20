@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>翻轉教育榮譽榜 - 獎狀產生器</title>
+    <title>翻轉教育-班級獎狀產生器</title>
+    
+    <!-- ★★★ 關鍵修復：解決 GitHub Pages 路徑錯誤問題 ★★★ -->
+    <base href=".">
+    
     <!-- 1. 載入 Tailwind CSS (樣式庫) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 2. 載入 React 核心 -->
@@ -32,8 +36,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // --- 0. 圖標元件庫 (為了單檔運作，將 Lucide 圖標內建化) ---
-        // 這裡將圖標改為可接收 props，以便自訂顏色或大小
+        // --- 0. 圖標元件庫 (內建 SVG) ---
         const Icons = {
             User: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
             Users: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
@@ -58,56 +61,72 @@
         const { useState, useEffect, useRef } = React;
 
         const FlipAwardGenerator = () => {
-            // --- 核心狀態管理 ---
             const [mode, setMode] = useState('single'); 
             const [teacherName, setTeacherName] = useState('王小明 老師');
             const [date, setDate] = useState(new Date().toISOString().split('T')[0]); 
 
-            // 單張模式數據
             const [studentName, setStudentName] = useState('張小美');
             const [awardTitle, setAwardTitle] = useState('閱讀小博士');
             const [comment, setComment] = useState('這學期主動閱讀了 50 本書，並樂於與同學分享心得，這份熱情值得嘉許！');
             const [showPresets, setShowPresets] = useState(false);
             
-            // 批次模式數據
             const [batchData, setBatchData] = useState([]); 
             const [currentBatchIndex, setCurrentBatchIndex] = useState(0);
             const [csvInput, setCsvInput] = useState('');
 
-            // AI Prompt
             const [aiPrompt, setAiPrompt] = useState('');
 
-            // UI 狀態
             const [selectedTemplate, setSelectedTemplate] = useState('classic');
             const canvasRef = useRef(null);
 
-            // --- 資料庫 ---
+            // --- 完整 30 款 PDF 獎項資料庫 (根據您提供的 PDF 內容提取) ---
             const presetAwards = [
+                // 個人特質
                 { category: '個人特質', title: '永不放棄獎', text: '在困難或挑戰面前從不氣餒，持之以恆，堅持不懈，展現出色的毅力和堅韌精神，值得嘉許！' },
                 { category: '個人特質', title: '靈感啟蒙獎', text: '在激發同學學習興趣、分享知識或鼓勵他人方面有卓越表現，值得嘉許！' },
                 { category: '個人特質', title: '積極參與獎', text: '全年積極參與課堂、課外活動，為班級做出貢獻，值得嘉許！' },
                 { category: '個人特質', title: '自我管理獎', text: '在自我管理、時間規劃或目標達成方面有優異表現，值得嘉許！' },
+                { category: '個人特質', title: '優秀守時者', text: '準時完成任務、上課或參與活動，展現出良好的時間管理和守時的價值觀，值得嘉許！' },
+                // 人際關係
                 { category: '人際關係', title: '友善大使', text: '促進友誼、關懷他人或解決衝突方面表現優秀，值得嘉許！' },
-                { category: '人際關係', title: '樂於助人獎', text: '樂於幫助他人，願意伸出援手，關心同學需求，展現出色的同理心，值得嘉許！' },
+                { category: '人際關係', title: '樂於助人獎', text: '樂於幫助他人，願意伸出援手，關心同學、老師或他人的需求，展現出色的同理心和關懷之心，值得嘉許！' },
+                { category: '人際關係', title: '社交冠軍', text: '在社交場合中展現出色的溝通能力和人際技巧，值得嘉許！' },
+                { category: '人際關係', title: '心靈小園丁', text: '關懷同學或提供幫助方面有積極表現，值得嘉許！' },
+                { category: '人際關係', title: '未來小領袖', text: '展現領導潛力、積極影響力和未來發展前景，值得嘉許！' },
+                // 多元才藝
                 { category: '多元才藝', title: '閱讀小將', text: '對書籍有濃厚興趣，並積極參與閱讀活動，值得嘉許！' },
                 { category: '多元才藝', title: '最強運動員', text: '在體育運動方面表現出色，值得嘉許！' },
                 { category: '多元才藝', title: '表演之星', text: '在舞台表演、音樂演奏或舞蹈領域表現突出，值得嘉許！' },
+                { category: '多元才藝', title: '健康食尚獎', text: '在飲食健康、食物營養或烹飪有優秀的技能，值得嘉許！' },
                 { category: '多元才藝', title: '設計小達人', text: '在設計、手繪或創意製作方面有優秀表現，值得嘉許！' },
+                { category: '多元才藝', title: '綠手指獎', text: '在校園園藝、植物栽培或環境美化方面有突出貢獻，值得嘉許！' },
                 { category: '多元才藝', title: '科技小達人', text: '在電子設備、科技應用或創新發明方面表現出色，值得嘉許！' },
+                { category: '多元才藝', title: '語言小達人', text: '對語言學習有熱情，並在學習外語或口語表達方面表現優異，值得嘉許！' },
+                { category: '多元才藝', title: '創意寫作王', text: '在創作故事、詩歌或短文方面展現出色，值得嘉許！' },
+                { category: '多元才藝', title: '資訊搜尋達人', text: '在網路上能快速、精準地找到所需資訊的能力，值得嘉許！' },
+                { category: '多元才藝', title: '說書達人', text: '在故事寫作、口述故事或敘述方面有優異表現，值得嘉許！' },
+                { category: '多元才藝', title: '遊戲設計獎', text: '在遊戲設計、策劃或創造方面有獨特見解，值得嘉許！' },
+                { category: '多元才藝', title: '教學助理獎', text: '在協助教學、輔導同學或解答問題方面有突出貢獻，值得嘉許！' },
+                { category: '多元才藝', title: '思辯哲學家', text: '在思辯、提出問題或哲學思考方面有深入探索，值得嘉許！' },
+                { category: '多元才藝', title: '特殊才能獎', text: '擁有特殊才能或技能，表現出眾，值得嘉許！' },
+                // 其他
                 { category: '其他', title: '綜合進步獎', text: '在多方面展現進步，表現出全面的學習態度和成長，值得嘉許！' },
+                { category: '其他', title: '動物友善獎', text: '對動物保護、關懷或野生動物有特別的熱情和關注，值得嘉許！' },
+                { category: '其他', title: '最佳義工', text: '積極參與義工活動，為社區或校園做出卓越貢獻，值得嘉許！' },
+                { category: '其他', title: '水源小尖兵', text: '對節水、保護水資源或倡導水資源循環利用有重要貢獻，值得嘉許！' },
                 { category: '其他', title: '愛護地球獎', text: '在環保、永續發展或愛護地球行動中有積極參與，值得嘉許！' },
             ];
 
             const templates = [
                 { id: 'classic', name: '經典榮譽', bgImage: null, bg: '#ffffff', border: '#1e40af', font: 'serif', textColor: '#1e3a8a', accent: '#fbbf24' },
                 { id: 'warm', name: '溫馨手繪', bgImage: null, bg: '#fef3c7', border: '#d97706', font: 'sans-serif', textColor: '#78350f', accent: '#f59e0b' },
-                { id: 'tech', name: '未來科技', bgImage: null, bg: '#111827', border: '#3b82f6', font: 'monospace', textColor: '#e0f2fe', accent: '#60a5fa' },
+                // 更新版型：繽紛星空 (取代原極簡/未來科技)
+                { id: 'starry', name: '繽紛星空', bgImage: null, bg: '#0f172a', border: '#38bdf8', font: 'sans-serif', textColor: '#f0f9ff', accent: '#fbbf24' },
                 { id: 'cute', name: '粉嫩可愛', bgImage: null, bg: '#fff1f2', border: '#be123c', font: 'sans-serif', textColor: '#881337', accent: '#fda4af' },
                 { id: 'nature', name: '自然清新', bgImage: null, bg: '#f0fdf4', border: '#15803d', font: 'serif', textColor: '#14532d', accent: '#86efac' },
                 { id: 'elegant', name: '典雅質感', bgImage: null, bg: '#faf5ff', border: '#7e22ce', font: 'serif', textColor: '#581c87', accent: '#d8b4fe' }
             ];
 
-            // --- Effect: 更新 AI Prompt ---
             useEffect(() => {
                 if (mode === 'single') {
                     setAiPrompt(`請扮演一位溫暖的國小班導師，針對學生「${studentName}」獲得「${awardTitle}」這個獎項，寫一段約 50 字的鼓勵評語。語氣要正向、具體，並能增強學生的自信心。請直接給我評語內容即可。`);
@@ -133,7 +152,6 @@
                 }
             }, [mode, batchData, currentBatchIndex]);
 
-            // --- CSV 解析 ---
             const parseCSV = (text) => {
                 let cleanText = text.replace(/```csv/g, '').replace(/```/g, '');
                 const lines = cleanText.trim().split(/\r\n|\n|\r/);
@@ -185,7 +203,6 @@
                 setShowPresets(false);
             };
 
-            // --- 繪圖邏輯 ---
             useEffect(() => {
                 const canvas = canvasRef.current;
                 if (!canvas) return;
@@ -197,19 +214,15 @@
 
                 const drawTextContent = () => {
                     ctx.textAlign = 'center';
-                    // 標題
                     ctx.font = `bold 80px ${template.font}`;
                     ctx.fillStyle = template.textColor;
                     ctx.fillText('榮 譽 狀', canvas.width / 2, 180);
-                    // 獎項
                     ctx.font = `bold 60px ${template.font}`;
                     ctx.fillStyle = template.accent;
                     ctx.fillText(awardTitle, canvas.width / 2, 300);
-                    // 姓名
                     ctx.font = `50px ${template.font}`;
                     ctx.fillStyle = template.textColor;
                     ctx.fillText(`茲獎勵 ${studentName} 同學`, canvas.width / 2, 400);
-                    // 評語
                     ctx.font = `40px ${template.font}`;
                     ctx.fillStyle = template.textColor;
                     const maxWidth = 800;
@@ -229,13 +242,11 @@
                         }
                     }
                     ctx.fillText(line, canvas.width / 2, y);
-                    // 底部
                     ctx.font = `30px ${template.font}`;
                     ctx.textAlign = 'left';
                     ctx.fillText(`導師：${teacherName}`, 80, canvas.height - 60);
                     ctx.textAlign = 'right';
                     ctx.fillText(`日期：${date.replace(/-/g, '.')}`, canvas.width - 80, canvas.height - 60);
-                    // Logo
                     ctx.textAlign = 'center';
                     ctx.font = `italic 20px ${template.font}`;
                     ctx.globalAlpha = 0.5;
@@ -267,7 +278,7 @@
                     ctx.lineWidth = 20;
                     ctx.strokeStyle = template.border;
                     ctx.strokeRect(40, 40, canvas.width - 80, canvas.height - 80);
-                    // 簡單幾何圖形
+                    
                     if (template.id === 'classic') {
                         ctx.fillStyle = template.accent;
                         ctx.beginPath(); ctx.arc(100, 100, 30, 0, 2 * Math.PI); ctx.fill();
@@ -275,9 +286,35 @@
                     } else if (template.id === 'warm') {
                         ctx.fillStyle = '#fcd34d'; 
                         for(let i=0; i<10; i++) { ctx.beginPath(); ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 20, 0, 2 * Math.PI); ctx.fill(); }
-                    } else if (template.id === 'tech') {
-                        ctx.strokeStyle = '#1d4ed8'; ctx.lineWidth = 2;
-                        for(let i=0; i<canvas.width; i+=50) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke(); }
+                    } else if (template.id === 'starry') { // 繽紛星空
+                        // 深邃背景
+                        ctx.fillStyle = template.bg;
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        
+                        // 霓虹邊框
+                        ctx.lineWidth = 4;
+                        ctx.strokeStyle = template.border;
+                        ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
+                        
+                        // 繽紛裝飾
+                        const colors = ['#f472b6', '#38bdf8', '#fbbf24', '#a78bfa'];
+                        // 角落裝飾圓
+                        ctx.fillStyle = colors[0];
+                        ctx.beginPath(); ctx.arc(0, 0, 150, 0, 2 * Math.PI); ctx.fill();
+                        ctx.fillStyle = colors[1];
+                        ctx.beginPath(); ctx.arc(canvas.width, 0, 100, 0, 2 * Math.PI); ctx.fill();
+                        ctx.fillStyle = colors[2];
+                        ctx.beginPath(); ctx.arc(canvas.width, canvas.height, 150, 0, 2 * Math.PI); ctx.fill();
+                        ctx.fillStyle = colors[3];
+                        ctx.beginPath(); ctx.arc(0, canvas.height, 100, 0, 2 * Math.PI); ctx.fill();
+                        
+                        // 隨機星點
+                        ctx.fillStyle = '#ffffff';
+                        for(let i=0; i<50; i++) {
+                            ctx.beginPath();
+                            ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 2, 0, 2 * Math.PI);
+                            ctx.fill();
+                        }
                     } else if (template.id === 'cute') {
                          ctx.fillStyle = template.accent;
                          for(let i=0; i<6; i++) {
@@ -306,14 +343,13 @@
                 }
             };
 
-            // --- UI 渲染 ---
             return (
                 <div className="min-h-screen bg-gray-50 text-gray-800 font-sans">
                     <header className="bg-white shadow-sm border-b border-gray-200 p-4 sticky top-0 z-10">
                         <div className="max-w-6xl mx-auto flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <div className="bg-blue-600 text-white p-2 rounded font-bold text-xl">翻</div>
-                                <h1 className="text-xl font-bold tracking-tight hidden md:block">翻轉教育榮譽榜</h1>
+                                <div className="bg-blue-600 text-white p-2 rounded font-bold text-xl">獎</div>
+                                <h1 className="text-xl font-bold tracking-tight hidden md:block">班級獎狀產生器</h1>
                             </div>
                             <div className="flex bg-gray-100 p-1 rounded-lg">
                                 <button onClick={() => setMode('single')} className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${mode === 'single' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>
@@ -327,9 +363,7 @@
                     </header>
 
                     <main className="max-w-6xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-                        {/* 左側控制區 */}
                         <div className="lg:col-span-5 space-y-6">
-                            {/* 資料區 */}
                             <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
                                 <h2 className="text-lg font-bold flex items-center gap-2 text-gray-800"><Icons.Calendar /> 基本資料</h2>
                                 <div className="grid grid-cols-2 gap-4">
@@ -398,7 +432,6 @@
                                 </section>
                             )}
 
-                            {/* AI 區 */}
                             <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-100">
                                 <div className="flex items-start gap-3">
                                     <div className="bg-purple-100 p-2 rounded-full shrink-0"><Icons.Sparkles className="text-purple-600" /></div>
@@ -414,7 +447,6 @@
                                 </div>
                             </div>
                             
-                            {/* 模板選擇 */}
                             <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                                 <h2 className="text-lg font-bold flex items-center gap-2 mb-4"><Icons.Layout /> 選擇獎狀風格</h2>
                                 <div className="grid grid-cols-3 gap-3">
@@ -429,7 +461,6 @@
                             </section>
                         </div>
 
-                        {/* 右側預覽與下載 */}
                         <div className="lg:col-span-7 space-y-6">
                             <div className="sticky top-24">
                                 <div className="bg-gray-800 rounded-xl p-4 shadow-2xl">
@@ -450,7 +481,6 @@
                                     <Icons.Download /> {mode === 'batch' ? `下載目前的獎狀` : '下載圖片'}
                                 </button>
 
-                                {/* 資源導流 (P1 轉換區塊) */}
                                 <div className="mt-6 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl border border-blue-100 p-6 shadow-sm">
                                     <div className="flex items-start gap-4">
                                         <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hidden md:block"><Icons.FileText className="text-indigo-600 w-8 h-8" /></div>
@@ -460,14 +490,13 @@
                                                 翻轉教育已為您準備好「30 種班級經營趣味獎狀」懶人包，包含 PDF 檔與可編輯的 Canva 模板。
                                             </p>
                                             <div className="flex flex-wrap gap-3 mt-4">
-                                                <a href="#" className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700 transition-colors shadow-sm">立即前往下載 <Icons.ArrowRight /></a>
-                                                <a href="#" className="flex items-center gap-2 bg-white text-indigo-700 border border-indigo-200 px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-50 transition-colors">更多期末活動教學資源</a>
+                                                <a href="https://flipedu.parenting.com.tw/teacher_resource/345?from=class_certificate" className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700 transition-colors shadow-sm">立即前往下載 <Icons.ArrowRight /></a>
+                                                <a href="https://flipedu.parenting.com.tw/teachingScope/45?from=class_certificate" className="flex items-center gap-2 bg-white text-indigo-700 border border-indigo-200 px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-50 transition-colors">更多期末活動教學資源</a>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Upsell 區塊 */}
                                 <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-5 mt-4">
                                     <div className="flex items-center gap-3">
                                         <div className="text-yellow-600">
@@ -475,7 +504,7 @@
                                         </div>
                                         <div className="text-sm text-gray-800">
                                             <span className="font-bold">更多資源：</span> 翻轉教育教學資源專區還有 500+ 份教學用簡報、學習單等你挖掘！
-                                            <a href="#" className="text-blue-600 hover:underline ml-1 font-medium">前往教學資源專區</a>
+                                            <a href="https://flipedu.parenting.com.tw/teacher_resource_list?from=class_certificate" className="text-blue-600 hover:underline ml-1 font-medium">前往教學資源專區</a>
                                         </div>
                                     </div>
                                 </div>
