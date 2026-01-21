@@ -119,17 +119,17 @@
 
             const templates = [
                 // 1. 經典榮譽 (改為黑體)
-                { id: 'classic', name: '經典榮譽', bgImage: null, bg: '#ffffff', border: '#1e40af', font: 'sans-serif', textColor: '#1e3a8a', accent: '#fbbf24' },
+                { id: 'classic', name: '經典榮譽', bgImage: null, bg: '#ffffff', border: '#1e40af', font: 'sans-serif', textColor: '#1e3a8a', accent: '#fbbf24', highlight: '#b45309' },
                 // 2. 溫馨幾何 (修正幾何圖案)
-                { id: 'warm', name: '溫馨幾何', bgImage: null, bg: '#fef3c7', border: '#d97706', font: 'sans-serif', textColor: '#78350f', accent: '#f59e0b' },
+                { id: 'warm', name: '溫馨幾何', bgImage: null, bg: '#fef3c7', border: '#d97706', font: 'sans-serif', textColor: '#78350f', accent: '#f59e0b', highlight: '#ea580c' },
                 // 3. 繽紛星空 (深色底)
-                { id: 'starry', name: '繽紛星空', bgImage: null, bg: '#0f172a', border: '#38bdf8', font: 'sans-serif', textColor: '#f0f9ff', accent: '#fbbf24' },
+                { id: 'starry', name: '繽紛星空', bgImage: null, bg: '#0f172a', border: '#38bdf8', font: 'sans-serif', textColor: '#f0f9ff', accent: '#fbbf24', highlight: '#fcd34d' },
                 // 4. 粉嫩可愛
-                { id: 'cute', name: '粉嫩可愛', bgImage: null, bg: '#fff1f2', border: '#be123c', font: 'sans-serif', textColor: '#881337', accent: '#fda4af' },
+                { id: 'cute', name: '粉嫩可愛', bgImage: null, bg: '#fff1f2', border: '#be123c', font: 'sans-serif', textColor: '#881337', accent: '#fda4af', highlight: '#db2777' },
                 // 5. 自然清新 (改為黑體)
-                { id: 'nature', name: '自然清新', bgImage: null, bg: '#f0fdf4', border: '#15803d', font: 'sans-serif', textColor: '#14532d', accent: '#86efac' },
+                { id: 'nature', name: '自然清新', bgImage: null, bg: '#f0fdf4', border: '#15803d', font: 'sans-serif', textColor: '#14532d', accent: '#86efac', highlight: '#16a34a' },
                 // 6. 典雅質感 (保留襯線體)
-                { id: 'elegant', name: '典雅質感', bgImage: null, bg: '#faf5ff', border: '#7e22ce', font: 'serif', textColor: '#581c87', accent: '#d8b4fe' }
+                { id: 'elegant', name: '典雅質感', bgImage: null, bg: '#faf5ff', border: '#7e22ce', font: 'serif', textColor: '#581c87', accent: '#d8b4fe', highlight: '#9333ea' }
             ];
 
             useEffect(() => {
@@ -222,9 +222,12 @@
                     ctx.font = `bold 80px ${template.font}`;
                     ctx.fillStyle = template.textColor;
                     ctx.fillText('榮 譽 狀', canvas.width / 2, 180);
+                    
+                    // Award Title with Highlight color
                     ctx.font = `bold 75px ${template.font}`;
-                    ctx.fillStyle = template.textColor;
+                    ctx.fillStyle = template.highlight;
                     ctx.fillText(awardTitle, canvas.width / 2, 320);
+                    
                     ctx.font = `50px ${template.font}`;
                     ctx.fillStyle = template.textColor;
                     ctx.fillText(`茲獎勵 ${studentName} 同學`, canvas.width / 2, 440);
@@ -386,6 +389,13 @@
                     </header>
 
                     <main className="max-w-6xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        
+                        {/* 新增提示文字 */}
+                        <div className="lg:col-span-12 bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-800 flex items-center gap-2">
+                            <span>💡</span>
+                            <span>可選擇單張製作或者批次匯入模式。建議以桌機使用，可達最佳預覽效果。</span>
+                        </div>
+
                         <div className="lg:col-span-5 space-y-6">
                             <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
                                 <h2 className="text-lg font-bold flex items-center gap-2 text-gray-800"><Icons.Calendar /> 基本資料</h2>
