@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>翻轉教育-班級獎狀產生器</title>
+    <title>獎狀產生器</title>
     
     <!-- ★★★ 關鍵修復：解決 GitHub Pages 路徑錯誤問題 ★★★ -->
     <base href=".">
@@ -118,12 +118,17 @@
             ];
 
             const templates = [
-                { id: 'classic', name: '經典榮譽', bgImage: null, bg: '#ffffff', border: '#1e40af', font: 'serif', textColor: '#1e3a8a', accent: '#fbbf24' },
-                { id: 'warm', name: '溫馨手繪', bgImage: null, bg: '#fef3c7', border: '#d97706', font: 'sans-serif', textColor: '#78350f', accent: '#f59e0b' },
-                // 更新版型：繽紛星空 (取代原極簡/未來科技)
+                // 1. 經典榮譽 (改為黑體)
+                { id: 'classic', name: '經典榮譽', bgImage: null, bg: '#ffffff', border: '#1e40af', font: 'sans-serif', textColor: '#1e3a8a', accent: '#fbbf24' },
+                // 2. 溫馨幾何 (修正幾何圖案)
+                { id: 'warm', name: '溫馨幾何', bgImage: null, bg: '#fef3c7', border: '#d97706', font: 'sans-serif', textColor: '#78350f', accent: '#f59e0b' },
+                // 3. 繽紛星空 (深色底)
                 { id: 'starry', name: '繽紛星空', bgImage: null, bg: '#0f172a', border: '#38bdf8', font: 'sans-serif', textColor: '#f0f9ff', accent: '#fbbf24' },
+                // 4. 粉嫩可愛
                 { id: 'cute', name: '粉嫩可愛', bgImage: null, bg: '#fff1f2', border: '#be123c', font: 'sans-serif', textColor: '#881337', accent: '#fda4af' },
-                { id: 'nature', name: '自然清新', bgImage: null, bg: '#f0fdf4', border: '#15803d', font: 'serif', textColor: '#14532d', accent: '#86efac' },
+                // 5. 自然清新 (改為黑體)
+                { id: 'nature', name: '自然清新', bgImage: null, bg: '#f0fdf4', border: '#15803d', font: 'sans-serif', textColor: '#14532d', accent: '#86efac' },
+                // 6. 典雅質感 (保留襯線體)
                 { id: 'elegant', name: '典雅質感', bgImage: null, bg: '#faf5ff', border: '#7e22ce', font: 'serif', textColor: '#581c87', accent: '#d8b4fe' }
             ];
 
@@ -217,12 +222,12 @@
                     ctx.font = `bold 80px ${template.font}`;
                     ctx.fillStyle = template.textColor;
                     ctx.fillText('榮 譽 狀', canvas.width / 2, 180);
-                    ctx.font = `bold 60px ${template.font}`;
-                    ctx.fillStyle = template.accent;
-                    ctx.fillText(awardTitle, canvas.width / 2, 300);
+                    ctx.font = `bold 75px ${template.font}`;
+                    ctx.fillStyle = template.textColor;
+                    ctx.fillText(awardTitle, canvas.width / 2, 320);
                     ctx.font = `50px ${template.font}`;
                     ctx.fillStyle = template.textColor;
-                    ctx.fillText(`茲獎勵 ${studentName} 同學`, canvas.width / 2, 400);
+                    ctx.fillText(`茲獎勵 ${studentName} 同學`, canvas.width / 2, 440);
                     ctx.font = `40px ${template.font}`;
                     ctx.fillStyle = template.textColor;
                     const maxWidth = 800;
@@ -242,16 +247,20 @@
                         }
                     }
                     ctx.fillText(line, canvas.width / 2, y);
+                    
+                    // 底部資訊往上調整 (y: canvas.height - 90)
                     ctx.font = `30px ${template.font}`;
-                    ctx.textAlign = 'left';
-                    ctx.fillText(`導師：${teacherName}`, 80, canvas.height - 60);
+                    
+                    // 導師欄位：有填才顯示
+                    if (teacherName && teacherName.trim() !== '') {
+                        ctx.textAlign = 'left';
+                        ctx.fillText(`導師：${teacherName}`, 80, canvas.height - 90);
+                    }
+
                     ctx.textAlign = 'right';
-                    ctx.fillText(`日期：${date.replace(/-/g, '.')}`, canvas.width - 80, canvas.height - 60);
-                    ctx.textAlign = 'center';
-                    ctx.font = `italic 20px ${template.font}`;
-                    ctx.globalAlpha = 0.5;
-                    ctx.fillText('Powered by 親子天下翻轉教育', canvas.width / 2, canvas.height - 30);
-                    ctx.globalAlpha = 1.0;
+                    ctx.fillText(`日期：${date.replace(/-/g, '.')}`, canvas.width - 80, canvas.height - 90);
+                    
+                    // 移除 Powered by 浮水印
                 };
 
                 if (template.bgImage) {
@@ -283,9 +292,23 @@
                         ctx.fillStyle = template.accent;
                         ctx.beginPath(); ctx.arc(100, 100, 30, 0, 2 * Math.PI); ctx.fill();
                         ctx.beginPath(); ctx.arc(canvas.width - 100, canvas.height - 100, 30, 0, 2 * Math.PI); ctx.fill();
-                    } else if (template.id === 'warm') {
+                    } else if (template.id === 'warm') { // 溫馨幾何 - 修正為角落裝飾，減少數量
                         ctx.fillStyle = '#fcd34d'; 
-                        for(let i=0; i<10; i++) { ctx.beginPath(); ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 20, 0, 2 * Math.PI); ctx.fill(); }
+                        
+                        // 左上角裝飾
+                        ctx.beginPath(); ctx.arc(0, 0, 150, 0, 2 * Math.PI); ctx.fill();
+                        ctx.beginPath(); ctx.arc(160, 40, 30, 0, 2 * Math.PI); ctx.fill();
+                        
+                        // 右下角裝飾
+                        ctx.beginPath(); ctx.arc(canvas.width, canvas.height, 180, 0, 2 * Math.PI); ctx.fill();
+                        ctx.beginPath(); ctx.arc(canvas.width - 200, canvas.height - 50, 20, 0, 2 * Math.PI); ctx.fill();
+                        
+                        // 右上小點綴
+                        ctx.beginPath(); ctx.arc(canvas.width - 50, 50, 40, 0, 2 * Math.PI); ctx.fill();
+                        
+                        // 左下小點綴
+                        ctx.beginPath(); ctx.arc(50, canvas.height - 50, 40, 0, 2 * Math.PI); ctx.fill();
+
                     } else if (template.id === 'starry') { // 繽紛星空
                         // 深邃背景
                         ctx.fillStyle = template.bg;
@@ -384,7 +407,7 @@
                                         <h2 className="text-lg font-bold flex items-center gap-2 mb-2"><Icons.Type /> 學生與獎項</h2>
                                         <div className="relative">
                                             <button onClick={() => setShowPresets(!showPresets)} className="text-xs bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-bold hover:bg-orange-200 flex items-center gap-1 transition-colors">
-                                                <Icons.BookOpen /> 快速套用範本
+                                                <Icons.BookOpen /> 點我快速套用範本
                                             </button>
                                             {showPresets && (
                                                 <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden max-h-96 overflow-y-auto">
@@ -424,8 +447,8 @@
                                                 <span className="text-xs text-green-600">預覽第 {currentBatchIndex + 1} 位</span>
                                             </div>
                                             <div className="flex gap-2">
-                                                <button disabled={currentBatchIndex === 0} onClick={() => setCurrentBatchIndex(prev => prev - 1)} className="flex-1 bg-white border border-green-300 text-green-700 py-1 rounded disabled:opacity-50 flex justify-center"><Icons.ChevronLeft /></button>
-                                                <button disabled={currentBatchIndex === batchData.length - 1} onClick={() => setCurrentBatchIndex(prev => prev + 1)} className="flex-1 bg-white border border-green-300 text-green-700 py-1 rounded disabled:opacity-50 flex justify-center"><Icons.ChevronRight /></button>
+                                                <button disabled={currentBatchIndex === 0} onClick={() => setCurrentBatchIndex(prev => prev - 1)} className="flex-1 bg-white border border-green-300 text-green-700 py-1 rounded disabled:opacity-50 flex justify-center items-center gap-1"><Icons.ChevronLeft /> 上一個</button>
+                                                <button disabled={currentBatchIndex === batchData.length - 1} onClick={() => setCurrentBatchIndex(prev => prev + 1)} className="flex-1 bg-white border border-green-300 text-green-700 py-1 rounded disabled:opacity-50 flex justify-center items-center gap-1">下一個 <Icons.ChevronRight /></button>
                                             </div>
                                         </div>
                                     )}
@@ -440,7 +463,7 @@
                                         <p className="text-xs text-purple-700 mb-2">您可以直接編輯下方的指令，修改成您喜歡的語氣，再複製給 AI。</p>
                                         <textarea value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} className="w-full h-24 text-xs p-2 border border-purple-200 rounded bg-white/80 focus:ring-2 focus:ring-purple-400 outline-none mb-2 font-mono" />
                                         <div className="flex items-center justify-between">
-                                            <span className="text-[10px] text-purple-500">{mode === 'batch' ? '提示：記得將您的學生名單也貼給 AI 喔！' : '提示：複製後前往 ChatGPT 貼上即可。'}</span>
+                                            <span className="text-[10px] text-purple-500">{mode === 'batch' ? '提示：複製後前往 ChatGPT / Gemini 貼上。可提供學生名單與特質' : '提示：複製後前往 ChatGPT / Gemini 貼上即可。'}</span>
                                             <button onClick={copyPrompt} className="flex items-center gap-1 text-xs bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded transition-colors shadow-sm whitespace-nowrap"><Icons.Copy /> 複製指令</button>
                                         </div>
                                     </div>
@@ -483,7 +506,7 @@
 
                                 <div className="mt-6 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl border border-blue-100 p-6 shadow-sm">
                                     <div className="flex items-start gap-4">
-                                        <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hidden md:block"><Icons.FileText className="text-indigo-600 w-8 h-8" /></div>
+                                        <img src="https://flipedu-cdn.parenting.com.tw/upload/dOQPJDDXHeEpBqroLGDhPu7iFYHnX2EVsYcg9hPo.png" className="w-24 h-auto rounded-lg shadow-sm hidden md:block" alt="教學資源封面" />
                                         <div className="flex-1">
                                             <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2"><Icons.DownloadCloud /> 沒空一個個做？直接下載 30 款模板包！</h3>
                                             <p className="text-sm text-gray-600 mt-2 leading-relaxed">
